@@ -2,7 +2,7 @@ import { TiptapCollabProvider } from '@hocuspocus/provider'
 import { useEffect, useState } from 'react'
 import { Doc as YDoc } from 'yjs'
 
-function getProvider({ docId, yDoc }: { docId: string; yDoc: YDoc }) {
+function getProvider({ docId,  yDoc }: { docId: string; yDoc: YDoc }) {
   return new TiptapCollabProvider({
     name: `${process.env.NEXT_PUBLIC_COLLAB_DOC_PREFIX}${docId}`,
     appId: process.env.NEXT_PUBLIC_TIPTAP_COLLAB_APP_ID ?? '',
@@ -15,7 +15,6 @@ export const useCollaboration = ({ docId, enabled = true }: { docId: string; ena
     | { state: 'loading' | 'idle'; provider: null; yDoc: null }
     | { state: 'loaded'; provider: TiptapCollabProvider; yDoc: YDoc }
   >(() => ({ state: enabled ? 'loading' : 'idle', provider: null, yDoc: null }))
-
   useEffect(() => {
     let isMounted = true
     // fetch data
@@ -31,10 +30,6 @@ export const useCollaboration = ({ docId, enabled = true }: { docId: string; ena
                 yDoc: null,
               },
         )
-
-        if (!isMounted) {
-          return
-        }
 
         const yDoc = new YDoc()
         // set state when the data received
@@ -53,7 +48,7 @@ export const useCollaboration = ({ docId, enabled = true }: { docId: string; ena
 
     // If enabled, fetch the data
     if (enabled) {
-      dataFetch()
+      dataFetch().then(r => console.log(r))
     }
     return () => {
       isMounted = false

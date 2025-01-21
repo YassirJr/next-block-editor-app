@@ -5,12 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function randomElement<T>(array: Array<T>): T {
-  return array[Math.floor(Math.random() * array.length)]
-}
-
-export * from './cssVar'
-export * from './getConnectionText'
-export * from './getRenderContainer'
-export * from './isCustomNodeSelected'
-export * from './isTextSelected'
+export * from '@/lib/utils/css-var'
+export * from '@/lib//utils/get-render-container'
+export * from '@/lib/utils/is-custom-node-selected'
+export * from '@/lib/utils/is-text-selected'

@@ -1,17 +1,19 @@
 'use client'
 
-import { HocuspocusProvider } from '@hocuspocus/provider'
-
 import { API } from '@/lib/api'
 
 import {
-  BlockquoteFigure,
+  BlockQuoteFigure,
   CharacterCount,
   CodeBlock,
   Color,
+  Details,
+  DetailsContent,
+  DetailsSummary,
   Document,
   Dropcursor,
   Figcaption,
+  FileHandler,
   Focus,
   FontFamily,
   FontSize,
@@ -27,6 +29,7 @@ import {
   Subscript,
   Superscript,
   Table,
+  TableOfContents,
   TableCell,
   TableHeader,
   TableRow,
@@ -39,15 +42,12 @@ import {
   Column,
   TaskItem,
   TaskList,
-} from '.'
+  UniqueID,
+  ImageUpload
+} from '@/extensions'
+import { isChangeOrigin } from '@tiptap/extension-collaboration'
 
-import { ImageUpload } from './ImageUpload'
-
-interface ExtensionKitProps {
-  provider?: HocuspocusProvider | null
-}
-
-export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
+export const ExtensionKit = () => [
   Document,
   Columns,
   TaskList,
@@ -60,6 +60,10 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     levels: [1, 2, 3, 4, 5, 6],
   }),
   HorizontalRule,
+  UniqueID.configure({
+    types: ['paragraph', 'heading', 'blockquote', 'codeBlock', 'table'],
+    filterTransaction: transaction => !isChangeOrigin(transaction),
+  }),
   StarterKit.configure({
     document: false,
     dropcursor: false,
@@ -69,6 +73,14 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     history: false,
     codeBlock: false,
   }),
+  Details.configure({
+    persist: true,
+    HTMLAttributes: {
+      class: 'details',
+    },
+  }),
+  DetailsContent,
+  DetailsSummary,
   CodeBlock,
   TextStyle,
   FontSize,
@@ -81,10 +93,29 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Highlight.configure({ multicolor: true }),
   Underline,
   CharacterCount.configure({ limit: 50000 }),
-  ImageUpload.configure({
-    clientId: provider?.document?.clientID,
-  }),
+  ImageUpload,
   ImageBlock,
+  FileHandler.configure({
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+    onDrop: (currentEditor, files, pos) => {
+      files.forEach(async file => {
+        const url = await API.uploadImage(file)
+
+        currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run()
+      })
+    },
+    onPaste: (currentEditor, files) => {
+      files.forEach(async file => {
+        const url = await API.uploadImage(file)
+
+        return currentEditor
+          .chain()
+          .setImageBlockAt({ pos: currentEditor.state.selection.anchor, src: url })
+          .focus()
+          .run()
+      })
+    },
+  }),
   TextAlign.extend({
     addKeyboardShortcuts() {
       return {}
@@ -107,7 +138,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   SlashCommand,
   Focus,
   Figcaption,
-  BlockquoteFigure,
+  BlockQuoteFigure,
   Dropcursor.configure({
     width: 2,
     class: 'ProseMirror-dropcursor border-black',
